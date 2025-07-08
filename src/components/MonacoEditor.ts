@@ -11,11 +11,40 @@ class MonacoEditor extends HTMLElement {
     const wrapper = document.createElement("div");
     wrapper.innerHTML = `
       <style>
+        .monaco-toolbar {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 16px 0 8px 0;
+        }
+        .download-btn {
+          background: linear-gradient(90deg, #4f8cff 0%, #235390 100%);
+          color: #fff;
+          border: none;
+          border-radius: 6px;
+          padding: 8px 20px;
+          font-size: 1rem;
+          font-weight: 600;
+          margin-right: 10px;
+          cursor: pointer;
+          box-shadow: 0 2px 8px rgba(79, 140, 255, 0.15);
+          transition: background 0.2s, transform 0.2s;
+          outline: none;
+        }
+        .download-btn:hover {
+          background: linear-gradient(90deg, #235390 0%, #4f8cff 100%);
+          transform: translateY(-2px) scale(1.04);
+        }
         .monaco-container {
           height: 100vh;
           width: 100%;
         }
       </style>
+      <div class="monaco-toolbar">
+        <button class="download-btn" id="download-btn" title="Download XML">
+          ⬇️
+        </button>
+      </div>
       <div class="monaco-container" id="monaco-container"></div>
     `;
     shadow.appendChild(wrapper);
@@ -23,6 +52,23 @@ class MonacoEditor extends HTMLElement {
 
   connectedCallback() {
     const container = this.shadowRoot?.getElementById("monaco-container")!;
+    const downloadBtn = this.shadowRoot?.getElementById("download-btn");
+    if (downloadBtn) {
+      downloadBtn.addEventListener("click", () => {
+        const xml = this.getContent();
+        const blob = new Blob([xml], { type: "application/xml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "diagram.xml";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 0);
+      });
+    }
     requestAnimationFrame(() => {
       this.editorInstance = monaco.editor.create(container, {
         value: "<bpmn:definitions>...</bpmn:definitions>",
