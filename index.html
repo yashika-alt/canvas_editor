@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Canvas Editor</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <!-- Custom Navigation Bar Component -->
+    <nav-bar></nav-bar>
+    <toast-message></toast-message>
+    <!-- App Sections -->
+    <section id="canvas" class="section visible">
+      <cytoscape-editor></cytoscape-editor>
+    </section>
+
+    <section id="editor" class="section">
+      <monaco-editor></monaco-editor>
+    </section>
+
+    <section id="import" class="section">
+      <file-upload></file-upload>
+      <sync-to-canvas></sync-to-canvas>
+    </section>
+
+    <!-- Entry Point for Vite + TypeScript -->
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
