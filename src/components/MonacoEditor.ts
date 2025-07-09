@@ -1,108 +1,106 @@
+// MonacoEditor.ts
 import * as monaco from "monaco-editor";
+import monacoCss from "monaco-editor/min/vs/editor/editor.main.css?inline";
 
-class MonacoEditor extends HTMLElement {
-  private editorInstance!: monaco.editor.IStandaloneCodeEditor;
+export class MonacoEditor extends HTMLElement {
+  private editor!: monaco.editor.IStandaloneCodeEditor;
+  private ro!: ResizeObserver;
   private fileImported: boolean = false;
+
 
   constructor() {
     super();
-    const shadow = this.attachShadow({ mode: "open" });
+    const root = this.attachShadow({ mode: "open" });
 
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = `
+    /* 1️⃣  pull Monaco CSS into the shadow DOM */
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(monacoCss);
+    root.adoptedStyleSheets = [sheet];
+
+    /* 2️⃣  template */
+    root.innerHTML = `
       <style>
-        .monaco-container {
-          height: 100vh;
-          width: 100%;
-        }
+        :host { display: block; height: 100%; }
+        .container { height: 100%; width: 100%; }
       </style>
-      <div class="monaco-container" id="monaco-container"></div>
+      <div class="container"></div>
     `;
-    shadow.appendChild(wrapper);
   }
 
   connectedCallback() {
-    const container = this.shadowRoot?.getElementById("monaco-container")!;
-    requestAnimationFrame(() => {
-      this.editorInstance = monaco.editor.create(container, {
-        value: "<bpmn:definitions>...</bpmn:definitions>",
-        language: "xml",
-        theme: "vs-dark",
-        automaticLayout: true,
-      });
+    const container = this.shadowRoot!.querySelector<HTMLDivElement>(".container")!;
 
-      //runs whenever the user changes the content in the Monaco Editor
-      this.editorInstance.onDidChangeModelContent(() => {
-        const xml = this.editorInstance.getValue();//gets the current XML code from the editor.
-        this.validateXML(xml);
-
-        this.dispatchEvent(
-          new CustomEvent("code-updated", {//sends a custom event "code-updated" from <monaco-editor>
-            detail: { xml },
-            bubbles: true,
-            composed: true,
-          })
-        );
-      });
-
-      // Trigger initial layout fix
-      setTimeout(() => this.editorInstance?.layout(), 50);
+    /* 3️⃣  create editor */
+    this.editor = monaco.editor.create(container, {
+      value: "<bpmn:definitions>…</bpmn:definitions>",
+      language: "xml",
+      theme: "vs-dark",
+      automaticLayout: false,   // we’ll drive layout manually
     });
 
-    //whenever the browser window resize, the monaco editor will adjust itself to fit in new size
-    window.addEventListener("resize", this.handleResize);
+    /* 4️⃣  content-change handler */
+    this.editor.onDidChangeModelContent(() => {
+      const value = this.editor.getValue();
+      this.dispatchEvent(new CustomEvent("code-updated", {
+        detail: { value },
+        bubbles: true,
+        composed: true,
+      }));
+      this.validateXML(value);
+      this.dispatchEvent(
+        new CustomEvent("code-updated", {//sends a custom event "code-updated" from <monaco-editor>
+          detail: { value },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      
+    });
+
+    /* 5️⃣  always lay out on size change */
+    this.ro = new ResizeObserver(() => this.editor.layout());
+    this.ro.observe(container);
   }
 
-  
   disconnectedCallback() {
-    window.removeEventListener("resize", this.handleResize);
+    this.ro.disconnect();
+    this.editor.dispose();
   }
 
-
-  handleResize = () => {
-    this.editorInstance?.layout();
-  };
-
-  
-  setContent(xml: string) {
-    this.editorInstance?.setValue(xml);
-    this.validateXML(xml);
+  /* public helpers ------------------------------------------------------- */
+  setContent(text: string, language = "xml") {
+    const model = monaco.editor.createModel(text, language);
+    this.editor.setModel(model);
+    this.editor.layout();
   }
+  getContent() { return this.editor.getValue(); }
 
-  getContent(): string {
-    return this.editorInstance?.getValue() || "";
-  }
 
   layout() {
-    this.editorInstance?.layout();
+    this.editor?.layout();
   }
 
-  validateXML(xml: string) {
+
+  /* simple XML validation example --------------------------------------- */
+  private validateXML(xml: string) {
     const parser = new DOMParser();
     const doc = parser.parseFromString(xml, "application/xml");
-    const errorNode = doc.getElementsByTagName("parsererror")[0];
-
-    const model = this.editorInstance.getModel();
-    if (!model) return;
-
-    const markers: monaco.editor.IMarkerData[] = [];
-
-    if (errorNode) {
-      const message = errorNode.textContent || "Invalid XML";
-      markers.push({
+    const error = doc.querySelector("parsererror");
+    monaco.editor.setModelMarkers(
+      this.editor.getModel()!,
+      "owner",
+      error ? [{
         severity: monaco.MarkerSeverity.Error,
-        message: message,
+        message: error.textContent ?? "Invalid XML",
         startLineNumber: 1,
         startColumn: 1,
         endLineNumber: 1,
         endColumn: 1,
-      });
-    }
-
-    monaco.editor.setModelMarkers(model, "xml", markers);
+      }] : [],
+    );
   }
 
-  setFileImported(imported: boolean) {
+   setFileImported(imported: boolean) {
     this.fileImported = imported;
   }
 
