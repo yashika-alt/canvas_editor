@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="Definitions_1"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+
+  <bpmn:process id="Process_1" isExecutable="true">
+
+    <bpmn:startEvent id="startEvent_1" name="Start">
+      <bpmn:outgoing>flow_1</bpmn:outgoing>
+    </bpmn:startEvent>
+
+    <bpmn:task id="task_1" name="Do Task" >
+      <bpmn:incoming>flow_1</bpmn:incoming>
+      <bpmn:outgoing>flow_2</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:exclusiveGateway id="exclusiveGateway_1" name="Decision">
+      <bpmn:incoming>flow_2</bpmn:incoming>
+      <bpmn:outgoing>flow_3</bpmn:outgoing>
+      <bpmn:outgoing>flow_4</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:task id="task_yes" name="Yes Task">
+      <bpmn:incoming>flow_3</bpmn:incoming>
+      <bpmn:outgoing>flow_5</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:task id="task_no" name="No Task">
+      <bpmn:incoming>flow_4</bpmn:incoming>
+      <bpmn:outgoing>flow_6</bpmn:outgoing>
+    </bpmn:task>
+
+    <bpmn:endEvent id="endEvent_1" name="End">
+      <bpmn:incoming>flow_5</bpmn:incoming>
+      <bpmn:incoming>flow_6</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:sequenceFlow id="flow_1" sourceRef="startEvent_1" targetRef="task_1"/>
+    <bpmn:sequenceFlow id="flow_2" sourceRef="task_1" targetRef="exclusiveGateway_1"/>
+    <bpmn:sequenceFlow id="flow_3" sourceRef="exclusiveGateway_1" targetRef="task_yes" name="Yes"/>
+    <bpmn:sequenceFlow id="flow_4" sourceRef="exclusiveGateway_1" targetRef="task_no" name="No"/>
+    <bpmn:sequenceFlow id="flow_5" sourceRef="task_yes" targetRef="endEvent_1"/>
+    <bpmn:sequenceFlow id="flow_6" sourceRef="task_no" targetRef="endEvent_1"/>
+
+  </bpmn:process>
+
+</bpmn:definitions>
+
