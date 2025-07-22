@@ -5,17 +5,29 @@ import "./components/FileUpload.ts";
 import "./components/ToastMessage.ts";
 import "./components/MonacoEditor.ts";
 import "monaco-editor/min/vs/editor/editor.main.css";
-import "./components/SyncToCanvas.ts";
 import "./components/EditableLabel.ts";
 import "./components/SyncToCodeButton.ts";
+import './components/InputNodeCard';
+import './components/ProcessNodeCard';
+import './components/FilterNodeCard';
+import './components/LLMNodeCard.ts';
+import './components/OutputNodeCard.ts';
 
-
-
+async function getCytoscapeCanvasWithRetry(retries = 10, delay = 100): Promise<any> {
+  for (let i = 0; i < retries; i++) {
+    // Updated for new monolithic component
+    const canvas = document.querySelector("cytoscape-editor") as any;
+    if (canvas?.updateFromXML) return canvas;
+    await new Promise(res => setTimeout(res, delay));
+  }
+  return null;
+}
 
 function showToast(message: string, type: "error" | "success" = "error") {
   const toastEl = document.querySelector("toast-message") as any;
   toastEl?.show?.(message, type);
 }
+(window as any).showToast = showToast;
 
 document.addEventListener("DOMContentLoaded", () => {
   const sections = document.querySelectorAll<HTMLElement>(".section");
@@ -29,8 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const target = document.getElementById(targetId);
     if (target) {
       target.classList.add("visible");
-
-      // 👇 Force Monaco layout when editor section becomes visible
       if (targetId === "editor") {
         const monacoEl = document.querySelector("monaco-editor") as any;
         requestAnimationFrame(() => monacoEl?.layout?.());
@@ -43,33 +53,42 @@ document.addEventListener("DOMContentLoaded", () => {
   fileUpload?.addEventListener("file-selected", async (e: Event) => {
     const file = (e as CustomEvent).detail.file as File;
     const fileExtension = file.name.split(".").pop()?.toLowerCase();
-
-    // ✅ Validate file type
     if (!fileExtension || !["bpmn", "xml"].includes(fileExtension)) {
       showToast(
         "❌ Unsupported file type. Please upload a .bpmn or .xml file."
       );
       return;
     }
-
     try {
       const content = await file.text();
-
       const monacoEl = document.querySelector("monaco-editor") as any;
       monacoEl?.setContent?.(content);
       monacoEl?.setFileImported?.(true);
-
       showToast("✅ File loaded successfully.", "success");
+      // Immediately sync to canvas after file upload
+      document.dispatchEvent(
+        new CustomEvent("sync-xml-to-canvas", {
+          detail: { xml: content, isFileImport: true },
+          bubbles: true,
+          composed: true,
+        })
+      );
     } catch (err) {
       console.error("File read/render error:", err);
       showToast("❌ Failed to process the file.");
     }
   });
 
-      document.addEventListener("sync-xml-to-canvas", (e: Event) => {
+  document.addEventListener("sync-xml-to-canvas", async (e: Event) => {
     const xml = (e as CustomEvent).detail.xml;
-    const canvas = document.querySelector("cytoscape-editor") as any;
-    canvas?.updateFromXML?.(xml);
+    const isFileImport = (e as CustomEvent).detail.isFileImport || false;
+    // Use retry helper to ensure cytoscape-canvas is available
+    const canvas = await getCytoscapeCanvasWithRetry();
+    if (canvas) {
+      canvas.updateFromXML(xml, isFileImport);
+    } else {
+      console.warn("cytoscape-canvas not found or updateFromXML missing after retry");
+    }
   });
 
   // Canvas to XML sync
@@ -79,5 +98,16 @@ document.addEventListener("DOMContentLoaded", () => {
     monacoEl?.setContent?.(xml);
   });
 
-
+  // Listen for code changes in the Monaco editor and sync to canvas
+  const monacoEl = document.querySelector("monaco-editor");
+  monacoEl?.addEventListener("code-updated", (e: Event) => {
+    const value = (e as CustomEvent).detail.value;
+    document.dispatchEvent(
+      new CustomEvent("sync-xml-to-canvas", {
+        detail: { xml: value },
+        bubbles: true,
+        composed: true,
+      })
+    );
+  });
 });

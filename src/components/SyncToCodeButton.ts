@@ -83,37 +83,40 @@ class SyncToCodeButton extends HTMLElement {
     const nodes = cy.nodes();
     const edges = cy.edges();
 
-    let xml = `<?xml version="1.0" encoding="UTF-8"?>
-<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">
-  <bpmn:process id="Process_1" isExecutable="false">`;
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn">\n  <bpmn:process id="Process_1" isExecutable="false">`;
 
-    // Add nodes
+    // Add nodes with incoming/outgoing
     nodes.forEach((node: any) => {
       const data = node.data();
       const shape = data.shape;
-      const label = data.label || shape;
-      
-      let tag = "task";
-      if (shape === "ellipse") {
-        tag = label.toLowerCase().includes("start") ? "startEvent" : "endEvent";
-      } else if (shape === "diamond") {
-        tag = "exclusiveGateway";
-      }
+      const label = data.name || data.label || shape;
+      let tag = data.bpmnType || "task";
 
-      xml += `
-    <bpmn:${tag} id="${data.id}" name="${label}" />`;
+      // Find incoming and outgoing edges for this node
+      const incoming = edges.filter((edge: any) => edge.data().target === data.id).map((edge: any) => edge.data().id);
+      const outgoing = edges.filter((edge: any) => edge.data().source === data.id).map((edge: any) => edge.data().id);
+
+      if (incoming.length > 0 || outgoing.length > 0) {
+        xml += `\n    <bpmn:${tag} id="${data.id}" name="${label}">`;
+        incoming.forEach((id: string) => {
+          xml += `\n      <bpmn:incoming>${id}</bpmn:incoming>`;
+        });
+        outgoing.forEach((id: string) => {
+          xml += `\n      <bpmn:outgoing>${id}</bpmn:outgoing>`;
+        });
+        xml += `\n    </bpmn:${tag}>`;
+      } else {
+        xml += `\n    <bpmn:${tag} id="${data.id}" name="${label}" />`;
+      }
     });
 
     // Add edges
     edges.forEach((edge: any) => {
       const data = edge.data();
-      xml += `
-    <bpmn:sequenceFlow id="${data.id}" sourceRef="${data.source}" targetRef="${data.target}" />`;
+      xml += `\n    <bpmn:sequenceFlow id="${data.id}" sourceRef="${data.source}" targetRef="${data.target}" />`;
     });
 
-    xml += `
-  </bpmn:process>
-</bpmn:definitions>`;
+    xml += `\n  </bpmn:process>\n</bpmn:definitions>`;
 
     return xml;
   }
@@ -124,4 +127,4 @@ class SyncToCodeButton extends HTMLElement {
   }
 }
 
-customElements.define("sync-to-code-button", SyncToCodeButton); 
+customElements.define("sync-to-code-button", SyncToCodeButton);

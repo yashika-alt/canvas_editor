@@ -63,9 +63,23 @@ class FileUpload extends HTMLElement {
         const file = input.files[0];
         const fileExtension = file.name.split(".").pop()?.toLowerCase();
 
+        // File extension validation
         if (!fileExtension || !["bpmn", "xml"].includes(fileExtension)) {
           fileName.textContent = "❌ Unsupported file type";
           return; // ❌ Stop dispatching event
+        }
+
+        // File size validation (max 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.size > maxSize) {
+          fileName.textContent = "❌ File too large (max 5MB)";
+          return;
+        }
+
+        // File name validation (prevent empty or very long names)
+        if (file.name.length === 0 || file.name.length > 255) {
+          fileName.textContent = "❌ Invalid file name";
+          return;
         }
 
         fileName.textContent = file.name;

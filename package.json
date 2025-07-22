@@ -16,7 +16,10 @@
   "dependencies": {
     "bpmn-js": "^18.6.2",
     "cytoscape": "^3.32.0",
+    "cytoscape-qtip": "^2.8.0",
+    "cytoscape-svg": "^0.4.0",
     "monaco-editor": "^0.52.2",
+    "qtip2": "^3.0.3",
     "vite-plugin-monaco-editor": "^1.1.0"
   }
 }

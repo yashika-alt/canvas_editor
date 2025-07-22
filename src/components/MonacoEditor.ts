@@ -10,72 +10,46 @@ export class MonacoEditor extends HTMLElement {
 
   constructor() {
     super();
-    const root = this.attachShadow({ mode: "open" });
-
-    /* 1️⃣  pull Monaco CSS into the shadow DOM */
-    const sheet = new CSSStyleSheet();
-    sheet.replaceSync(monacoCss);
-    root.adoptedStyleSheets = [sheet];
-
-    /* 2️⃣  template */
-    root.innerHTML = `
+    // Use light DOM instead of shadow DOM
+    this.innerHTML = `
       <style>
         :host { display: block; height: 100%; }
-        .monaco-toolbar {
-          display: flex;
-          justify-content: flex-end;
-          align-items: center;
-          padding: 16px 0 8px 0;
-        }
-        .download-btn {
-          background: linear-gradient(90deg, #4f8cff 0%, #235390 100%);
+        .container { height: 100%; width: 100%; position: relative; }
+        .download-btn, .sync-btn {
+          position: absolute;
+          top: 16px;
+          z-index: 10;
+          background: #1976d2;
           color: #fff;
           border: none;
-          border-radius: 6px;
-          padding: 8px 20px;
-          font-size: 1rem;
+          border-radius: 8px;
+          padding: 8px 10px;
+          font-size: 14px;
           font-weight: 600;
-          margin-right: 10px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.12);
           cursor: pointer;
-          box-shadow: 0 2px 8px rgba(79, 140, 255, 0.15);
-          transition: background 0.2s, transform 0.2s;
-          outline: none;
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          transition: background 0.2s;
         }
-        .download-btn:hover {
-          background: linear-gradient(90deg, #235390 0%, #4f8cff 100%);
-          transform: translateY(-2px) scale(1.04);
+        .download-btn { right: 16px; }
+        .sync-btn { right: 100px; }
+        .download-btn:hover, .sync-btn:hover {
+          background: #1565c0;
         }
-        .container { height: 100%; width: 100%; }
+        .download-btn svg, .sync-btn svg {
+          width: 18px;
+          height: 18px;
+        }
       </style>
-      <div class="monaco-toolbar">
-        <button class="download-btn" id="download-btn" title="Download XML">
-          ⬇️
-        </button>
+      <div class="container">
       </div>
-       <div class="monaco-container" id="monaco-container"></div>
     `;
   }
 
   connectedCallback() {
-    const container = this.shadowRoot!.querySelector<HTMLDivElement>(".monaco-container")!;
-
-    const downloadBtn = this.shadowRoot?.getElementById("download-btn");
-    if (downloadBtn) {
-      downloadBtn.addEventListener("click", () => {
-        const xml = this.getContent();
-        const blob = new Blob([xml], { type: "application/xml" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "diagram.xml";
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 0);
-      });
-    }
+    const container = this.querySelector<HTMLDivElement>(".container")!;
 
     /* 3️⃣  create editor */
     this.editor = monaco.editor.create(container, {
@@ -101,7 +75,6 @@ export class MonacoEditor extends HTMLElement {
           composed: true,
         })
       );
-      
     });
 
     /* 5️⃣  always lay out on size change */
@@ -119,6 +92,12 @@ export class MonacoEditor extends HTMLElement {
     const model = monaco.editor.createModel(text, language);
     this.editor.setModel(model);
     this.editor.layout();
+    // Dispatch code-updated event for auto-sync
+    this.dispatchEvent(new CustomEvent("code-updated", {
+      detail: { value: text },
+      bubbles: true,
+      composed: true,
+    }));
   }
   getContent() { return this.editor.getValue(); }
 

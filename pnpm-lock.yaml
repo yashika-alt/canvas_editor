@@ -14,9 +14,18 @@ importers:
       cytoscape:
         specifier: ^3.32.0
         version: 3.32.1
+      cytoscape-qtip:
+        specifier: ^2.8.0
+        version: 2.8.0(cytoscape@3.32.1)
+      cytoscape-svg:
+        specifier: ^0.4.0
+        version: 0.4.0(cytoscape@3.32.1)
       monaco-editor:
         specifier: ^0.52.2
         version: 0.52.2
+      qtip2:
+        specifier: ^3.0.3
+        version: 3.0.3
       vite-plugin-monaco-editor:
         specifier: ^1.1.0
         version: 1.1.0(monaco-editor@0.52.2)
@@ -312,6 +321,16 @@ packages:
   component-event@0.2.1:
     resolution: {integrity: sha512-wGA++isMqiDq1jPYeyv2as/Bt/u+3iLW0rEa+8NQ82jAv3TgqMiCM+B2SaBdn2DfLilLjjq736YcezihRYhfxw==}
 
+  cytoscape-qtip@2.8.0:
+    resolution: {integrity: sha512-PsK0AGWpP/pLtdCARys8UKruofXG3Rp8x7qiumaEZCwrXUEyKcb899aWBlQmDRfUIUjJsd9sA84m2wpP0n6/Xg==}
+    peerDependencies:
+      cytoscape: ^2.2.0 || ^3.0.0
+
+  cytoscape-svg@0.4.0:
+    resolution: {integrity: sha512-omqIzfPd1Vy9mk6lHTiR2wTbjxELxb9GXSQ2pE6W+GwAe/6/yvOUQ2h5ApFf2QhCBnpMwLkCTq5DZXxBCgUpDw==}
+    peerDependencies:
+      cytoscape: ^3.2.0
+
   cytoscape@3.32.1:
     resolution: {integrity: sha512-dbeqFTLYEwlFg7UGtcZhCCG/2WayX72zK3Sq323CEX29CY81tYfVhw1MIdduCtpstB0cTOhJswWlM/OEB3Xp+Q==}
     engines: {node: '>=0.10'}
@@ -336,6 +355,9 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  ev-emitter@2.1.2:
+    resolution: {integrity: sha512-jQ5Ql18hdCQ4qS+RCrbLfz1n+Pags27q5TwMKvZyhp5hh2UULUYZUy1keqj6k6SYsdqIYjnmz7xyyEY0V67B8Q==}
+
   fdir@6.4.6:
     resolution: {integrity: sha512-hiFoqpyZcfNm1yc4u8oWCf9A2c4D3QjCrks3zmoVKVxpQRzmPNar1hUJcBG2RQHvEVGDN+Jm81ZheVLAQMK6+w==}
     peerDependencies:
@@ -355,8 +377,14 @@ packages:
   ids@1.0.5:
     resolution: {integrity: sha512-XQ0yom/4KWTL29sLG+tyuycy7UmeaM/79GRtSJq6IG9cJGIPeBz5kwDCguie3TwxaMNIc3WtPi0cTa1XYHicpw==}
 
+  imagesloaded@5.0.0:
+    resolution: {integrity: sha512-/0JGSubc1MTCoDKVmonLHgbifBWHdyLkun+R/151E1c5n79hiSxcd7cB7mPXFgojYu8xnRZv7GYxzKoxW8BetQ==}
+
   inherits-browser@0.1.0:
     resolution: {integrity: sha512-CJHHvW3jQ6q7lzsXPpapLdMx5hDpSF3FSh45pwsj6bKxJJ8Nl8v43i5yXnr3BdfOimGHKyniewQtnAIp3vyJJw==}
+
+  jquery@3.7.1:
+    resolution: {integrity: sha512-m4avr8yL8kmFN8psrbFFFmB/If14iN5o9nw/NgnnM+kybDJpRsAynV2BsfpTYrTRysYUdADVD7CkUUizgkpLfg==}
 
   min-dash@4.2.3:
     resolution: {integrity: sha512-VLMYQI5+FcD9Ad24VcB08uA83B07OhueAlZ88jBK6PyupTvEJwllTMUqMy0wPGYs7pZUEtEEMWdHB63m3LtEcg==}
@@ -401,6 +429,9 @@ packages:
 
   preact@10.26.9:
     resolution: {integrity: sha512-SSjF9vcnF27mJK1XyFMNJzFd5u3pQiATFqoaDy03XuN00u4ziveVVEGt5RKJrDR8MHE/wJo9Nnad56RLzS2RMA==}
+
+  qtip2@3.0.3:
+    resolution: {integrity: sha512-vfSEVYg1teA4g3RhT9fnBXzEQrkgyU5CrQE8j6WzZs5LBupG+Nq97mFq4BmDKcA6mGSMFiIqm70+ydvWW1KnGg==}
 
   rollup@4.44.2:
     resolution: {integrity: sha512-PVoapzTwSEcelaWGth3uR66u7ZRo6qhPHc0f2uRO9fX6XDVNrIiGYS0Pj9+R8yIIYSD/mCx2b16Ws9itljKSPg==}
@@ -642,6 +673,16 @@ snapshots:
 
   component-event@0.2.1: {}
 
+  cytoscape-qtip@2.8.0(cytoscape@3.32.1):
+    dependencies:
+      cytoscape: 3.32.1
+      jquery: 3.7.1
+      qtip2: 3.0.3
+
+  cytoscape-svg@0.4.0(cytoscape@3.32.1):
+    dependencies:
+      cytoscape: 3.32.1
+
   cytoscape@3.32.1: {}
 
   diagram-js-direct-editing@3.2.0(diagram-js@15.3.0):
@@ -695,6 +736,8 @@ snapshots:
       '@esbuild/win32-ia32': 0.25.6
       '@esbuild/win32-x64': 0.25.6
 
+  ev-emitter@2.1.2: {}
+
   fdir@6.4.6(picomatch@4.0.2):
     optionalDependencies:
       picomatch: 4.0.2
@@ -706,7 +749,13 @@ snapshots:
 
   ids@1.0.5: {}
 
+  imagesloaded@5.0.0:
+    dependencies:
+      ev-emitter: 2.1.2
+
   inherits-browser@0.1.0: {}
+
+  jquery@3.7.1: {}
 
   min-dash@4.2.3: {}
 
@@ -745,6 +794,11 @@ snapshots:
       source-map-js: 1.2.1
 
   preact@10.26.9: {}
+
+  qtip2@3.0.3:
+    dependencies:
+      imagesloaded: 5.0.0
+      jquery: 3.7.1
 
   rollup@4.44.2:
     dependencies:
